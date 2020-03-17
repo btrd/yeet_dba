@@ -21,13 +21,20 @@ module YeetDba
     end
 
     def association_name
-      db_column.name.gsub(/_id\z/, '')
+      tmp = db_column.name.gsub(/_id\z/, '')
+      return tmp if model.reflections[tmp].present?
+
+      res = model.reflections.find do |key, reflection|
+        reflection.options[:foreign_key] == db_column.name
+      end
+
+      res&.first || tmp
     end
 
     def model
       ActiveRecord::Base.descendants.detect { |c| c.table_name == table_name }
     end
-    
+
     def association
       model && model.reflections[association_name]
     end
